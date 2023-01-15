@@ -1,27 +1,37 @@
 import discord
-import os
+from discord.ext import commands
+from os import getenv
+
 from dotenv import load_dotenv
 
 # gets env var
 load_dotenv()
 
-# intents - bs for disc to work
-intents = discord.Intents.default()
-intents.message_content = True
-client = discord.Client(intents=intents)
+# initialsinf bots - switch intents to default and message content to true bfr finish
+bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
 
 # event when bot starts
-@client.event
+@bot.event
 async def on_ready():
     print("Bot is ready!")
 
-# command when there is a message in server
-@client.event
-async def on_message(message):
-    if message.author == client.user:
+# bot command - only accepts messages from specific server
+@bot.command()
+async def stats(ctx):
+    if ctx.channel.name != "testing":
         return
-    await message.channel.send("Hello!")
+    
+    quotedText = 'Which *stats* do you want?'
+    embed=discord.Embed(title= quotedText, color=discord.Color.blue())
+    await ctx.send(embed=embed)
+    
+    msg = await bot.wait_for("message")
+    embed.title = msg.content
+    await ctx.send(embed=embed)
 
-# gets tokem
-TOKEN = os.getenv("TOKEN")
-client.run(TOKEN)
+
+#     await bot.process_commands(message) # when overriding discords built in methods
+    
+
+TOKEN = getenv("TOKEN")
+bot.run(TOKEN)
