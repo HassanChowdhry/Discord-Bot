@@ -1,13 +1,14 @@
 import discord
 from discord.ext import commands
 from os import getenv
-
+from service.leetStats import getLeetStats
 from dotenv import load_dotenv
 
 # gets env var
 load_dotenv()
+
 # initialsinf bots - switch intents to default and message content to true bfr finish
-bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
+bot = commands.Bot(command_prefix="!", intents=discord.Intents.all(), case_insensitive=True)
 
 # event when bot starts
 @bot.event
@@ -26,12 +27,20 @@ async def stats(ctx):
     await ctx.send(embed=embed)
     
     # for now sends back which applications stats we want
-    msg = await bot.wait_for("message")
-    if msg.content == "Leetcode":
+    msg = await bot.wait_for("message", check=lambda m: m.author == ctx.author)
+    if msg.content.lower() in "leetcode":
         embed.title = "Enter your username"
         await ctx.send(embed=embed)
-        username = await bot.wait_for("message")
+        username = await bot.wait_for("message", check=lambda m: m.author == ctx.author)
+        username = username.content
+        df = await getLeetStats(username=username)
         
+        # Convert the DataFrame to a string for sending through Discord
+        stats_message = df.to_string(index=False)
+        
+        # Sending the stats as a code block for better formatting
+        await ctx.send(f"```{stats_message}```")
+    
     else:
         embed.title = "Not available"
         await ctx.send(embed=embed)
